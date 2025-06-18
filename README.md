@@ -126,46 +126,4 @@ Telemedicine consultation fees
 Emergency service payments
 Healthcare insurance claims
 
--> System Architecture Overview
-
-┌─────────────────────────────────────────────────────────────┐
-│                    CUSTOMER LAYER                           │
-├─────────────────┬───────────────────────────────────────────┤
-│  Customer App   │           Ambassador App                  │
-│                 │                                           │
-│ • QR Generator  │ • QR Scanner & NFC                        │
-│ • Order Display │ • Cash Transaction Handler                │
-│ • Offline Mode  │ • Local SQLite Storage                    │
-│ • SMS Backup    │ • Earnings Tracker                        │
-└─────────────────┴───────────────────────────────────────────┘
-         │                           │
-         └─────────────┬─────────────┘
-                       │
-┌─────────────────────────────────────────────────────────────┐
-│                OFFLINE STORAGE LAYER                        │
-│                                                             │
-│ • Transaction Queue (72-hour capacity)                      │
-│ • Cryptographic Signatures & Security                      	│
-│ • Ambassador Reputation Data                                │
-│ • Mesh Network Topology                                     │
-└─────────────────────────────────────────────────────────────┘
-                       │
-┌─────────────────────────────────────────────────────────────┐
-│                SYNCHRONIZATION LAYER                       	  │
-├─────────────┬─────────────┬─────────────┬─────────────────────┤
-│ Mesh Network│ SMS Gateway │ Internet    │ Satellite Backup    │
-│ P2P Sync    │ Critical    │ Auto-Sync   │ (Future)            │
-│             │ Alerts      │             │                     │
-└─────────────┴─────────────┴─────────────┴─────────────────────┘
-                       │
-┌─────────────────────────────────────────────────────────────┐
-│                  AMAZON CLOUD LAYER                        	│
-│                                                             │
-│ • Payment Processing Engine                                 │
-│ • ML-Powered Fraud Detection                                │
-│ • Ambassador Management System                              │
-│ • Analytics & Reporting Dashboard                           │
-│ • Integration with existing Amazon Pay infrastructure       │
-└─────────────────────────────────────────────────────────────┘
-
 The Ultimate Vision: Transform every rural touchpoint into a digital commerce gateway, creating India's largest distributed payment infrastructure powered by community economics. Make internet outages irrelevant for digital payments, ensuring connectivity never again stands between rural India and economic opportunity.
