@@ -1,5 +1,5 @@
 # Amazon-Seva-Pay
-Bridging the Digital Divide - Offline Payment System for Rural India
+Bridging the Digital Divide - Offline Payment System for Rural India - HackOn With Amazon - Season 5
 
 Problem - 67% of rural India is not well connected to the internet, resulting in Amazon losing ₹1,200+ crores of orders every year due to non-delivery and restricting 400+ million people from being potential customers. Conventional payment mechanisms entirely collapse in the absence of internet connectivity, making rural consumers incapable of concluding e-commerce transactions even when they possess cash in hand.
 
