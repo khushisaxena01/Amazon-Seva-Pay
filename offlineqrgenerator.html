@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Seva Pay - Customer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #FF9900, #232F3E);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            color: #232F3E;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .tagline {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .offline {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .online {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .order-form {
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #FF9900;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: #FF9900;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #e68900;
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .qr-section {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        #qrcode {
+            margin: 20px 0;
+        }
+        
+        .queue-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .queue-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .priority-high {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+        
+        .priority-medium {
+            color: #f57c00;
+        }
+        
+        .priority-low {
+            color: #388e3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🛒 Amazon Seva Pay</div>
+            <div class="tagline">Every Chai Stall is Your Gateway</div>
+        </div>
+        
+        <div id="connectionStatus" class="status offline">
+            📵 Offline Mode - Find Your Nearest Ambassador
+        </div>
+        
+        <div class="order-form">
+            <div class="form-group">
+                <label for="orderId">Order ID</label>
+                <input type="text" id="orderId" value="AMZ789456123" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="amount">Amount (₹)</label>
+                <input type="number" id="amount" value="299" min="1" max="10000">
+            </div>
+            
+            <div class="form-group">
+                <label for="priority">Transaction Priority</label>
+                <select id="priority">
+                    <option value="high">High (₹500+ or Time Sensitive)</option>
+                    <option value="medium" selected>Medium (Regular Order)</option>
+                    <option value="low">Low (Non-Urgent)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="customerName">Customer Name</label>
+                <input type="text" id="customerName" value="Priya Sharma" required>
+            </div>
+            
+            <button class="btn" onclick="generateOfflineQR()">
+                🎯 Generate Payment QR (Offline)
+            </button>
+        </div>
+        
+        <div id="qrSection" class="qr-section" style="display: none;">
+            <h3>📱 Show this QR to Ambassador</h3>
+            <div id="qrcode"></div>
+            <p><strong>Walk to nearest tea stall/shop</strong></p>
+            <p>Ambassador will scan & process your payment</p>
+            <button class="btn" onclick="addToQueue()" style="margin-top: 15px;">
+                📋 Add to Sync Queue
+            </button>
+        </div>
+        
+        <div class="queue-info">
+            <h4>📊 Smart Transaction Queue</h4>
+            <p style="font-size: 12px; color: #666; margin-bottom: 10px;">
+                Transactions prioritized by value & urgency
+            </p>
+            <div id="queueList">
+                <!-- Queue items will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate offline/online status
+        let isOnline = false;
+        let transactionQueue = [];
+        let currentQRData = null;
+        
+        // Initialize demo data
+        window.onload = function() {
+            updateConnectionStatus();
+            loadExistingQueue();
+        };
+        
+        function updateConnectionStatus() {
+            const statusDiv = document.getElementById('connectionStatus');
+            if (isOnline) {
+                statusDiv.className = 'status online';
+                statusDiv.innerHTML = '🌐 Online - Direct Payment Available';
+            } else {
+                statusDiv.className = 'status offline';
+                statusDiv.innerHTML = '📵 Offline Mode - Find Your Nearest Ambassador';
+            }
+        }
+        
+        function generateOfflineQR() {
+            const orderId = document.getElementById('orderId').value;
+            const amount = document.getElementById('amount').value;
+            const priority = document.getElementById('priority').value;
+            const customerName = document.getElementById('customerName').value;
+            
+            if (!orderId || !amount || !customerName) {
+                alert('Please fill all required fields');
+                return;
+            }
+            
+            // Create transaction data with encryption simulation
+            currentQRData = {
+                orderId: orderId,
+                amount: parseFloat(amount),
+                priority: priority,
+                customerName: customerName,
+                timestamp: Date.now(),
+                hash: generateSimpleHash(orderId + amount + Date.now()),
+                status: 'pending'
+            };
+            
+            // Generate QR Code
+            const qrString = JSON.stringify(currentQRData);
+            const qrDiv = document.getElementById('qrcode');
+            qrDiv.innerHTML = ''; // Clear previous QR
+            
+            QRCode.toCanvas(qrDiv, qrString, {
+                width: 200,
+                height: 200,
+                colorDark: '#000',
+                colorLight: '#fff',
+                margin: 2
+            }, function (error) {
+                if (error) {
+                    console.error(error);
+                    alert('QR Code generation failed');
+                } else {
+                    document.getElementById('qrSection').style.display = 'block';
+                    console.log('QR Code generated successfully');
+                }
+            });
+        }
+        
+        function addToQueue() {
+            if (!currentQRData) {
+                alert('Generate QR first');
+                return;
+            }
+            
+            // Add to transaction queue with smart prioritization
+            transactionQueue.push({...currentQRData});
+            
+            // Sort queue by priority and amount (Smart Queue Algorithm)
+            transactionQueue.sort((a, b) => {
+                const priorityOrder = {high: 3, medium: 2, low: 1};
+                
+                // First sort by priority
+                if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+                    return priorityOrder[b.priority] - priorityOrder[a.priority];
+                }
+                
+                // Then by amount (higher amounts first)
+                return b.amount - a.amount;
+            });
+            
+            // Save to localStorage (simulating offline storage)
+            localStorage.setItem('sevaPayQueue', JSON.stringify(transactionQueue));
+            
+            updateQueueDisplay();
+            alert('Transaction added to sync queue! 📋\nWill sync when connectivity returns.');
+            
+            // Reset form for next transaction
+            document.getElementById('qrSection').style.display = 'none';
+            currentQRData = null;
+        }
+        
+        function updateQueueDisplay() {
+            const queueList = document.getElementById('queueList');
+            queueList.innerHTML = '';
+            
+            if (transactionQueue.length === 0) {
+                queueList.innerHTML = '<p style="color: #666; font-style: italic;">No pending transactions</p>';
+                return;
+            }
+            
+            transactionQueue.forEach((item, index) => {
+                const queueItem = document.createElement('div');
+                queueItem.className = 'queue-item';
+                
+                const priorityClass = `priority-${item.priority}`;
+                queueItem.innerHTML = `
+                    <span><strong>#${index + 1}</strong> ₹${item.amount}</span>
+                    <span class="${priorityClass}">${item.priority.toUpperCase()}</span>
+                `;
+                queueList.appendChild(queueItem);
+            });
+        }
+        
+        function loadExistingQueue() {
+            const saved = localStorage.getItem('sevaPayQueue');
+            if (saved) {
+                transactionQueue = JSON.parse(saved);
+                updateQueueDisplay();
+            }
+        }
+        
+        function generateSimpleHash(input) {
+            let hash = 0;
+            for (let i = 0; i < input.length; i++) {
+                const char = input.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32-bit integer
+            }
+            return Math.abs(hash).toString(16);
+        }
+        
+        // Simulate network toggle for demo
+        function toggleNetwork() {
+            isOnline = !isOnline;
+            updateConnectionStatus();
+            
+            if (isOnline && transactionQueue.length > 0) {
+                setTimeout(() => {
+                    alert(`📡 Syncing ${transactionQueue.length} transactions to server...`);
+                    // In real app, this would sync with Python backend
+                }, 1000);
+            }
+        }
+        
+        // Add network toggle button for demo
+        setTimeout(() => {
+            const toggleBtn = document.createElement('button');
+            toggleBtn.innerHTML = '🔄 Toggle Network (Demo)';
+            toggleBtn.className = 'btn';
+            toggleBtn.style.marginTop = '20px';
+            toggleBtn.style.background = '#666';
+            toggleBtn.onclick = toggleNetwork;
+            document.querySelector('.container').appendChild(toggleBtn);
+        }, 2000);
+    </script>
+</body>
+</html>
